@@ -26,7 +26,7 @@ def load_vectorstore():
     loader = PyPDFLoader("data/AI Engineer Assessments.pdf")  # replace with your PDF
     docs = loader.load()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)
     chunks = splitter.split_documents(docs)
 
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -90,7 +90,7 @@ if query:
     st.session_state.messages.append({"role": "user", "content": query})
 
     # --- similarity search ---
-    docs = vectorstore.similarity_search(query, k=3)
+    docs = vectorstore.similarity_search(query, k=5)
     context = "\n\n".join([d.page_content for d in docs])
     final_prompt = prompt.format(context=context, question=query)
 
@@ -109,3 +109,4 @@ if query:
 
     # Refresh chat to show new messages
     display_messages()
+
