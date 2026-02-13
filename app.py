@@ -1,119 +1,118 @@
-# Triggering fresh deploy
 import streamlit as st
 import os
-from dotenv import load_dotenv
 
-# -------------------------
-# Document Loading & Processing
-# -------------------------
-from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain_community.vectorstores import FAISS
+# LangChain imports
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 
-# Groq LLM
 from langchain_groq import ChatGroq
-
-# LangChain utilities
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 
 # -------------------------
-# Load API Keys from .env
+# Load API Key from Streamlit Secrets
 # -------------------------
-load_dotenv()
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not GROQ_API_KEY:
-    st.error("GROQ_API_KEY not found! Please add it to your .env file.")
+    st.error("❌ GROQ_API_KEY not found. Add it in Streamlit Secrets.")
     st.stop()
-
-# -------------------------
-# Document Chunking & Vector DB Setup
-# -------------------------
-def initialize_rag():
-    if not os.path.exists('data/'):
-        os.makedirs('data/')
-        return None
-
-    # Load PDFs
-    loader = DirectoryLoader('data/', glob="./*.pdf", loader_cls=PyPDFLoader)
-    docs = loader.load()
-    if not docs:
-        return None
-
-    # Split into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-    chunks = text_splitter.split_documents(docs)
-
-    # Local embeddings (HuggingFace)
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-    # Build FAISS vector store
-    vectorstore = FAISS.from_documents(chunks, embeddings)
-    return vectorstore
 
 # -------------------------
 # Streamlit UI
 # -------------------------
-st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🏢")
-st.title("🏢 Mysoft Heaven (BD) Ltd. AI Assistant")
+st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🤖")
+st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
+
+# -------------------------
+# RAG Setup
+# -------------------------
+@st.cache_resource
+def initialize_rag():
+    pdf_path = "data/AI Engineer Assessments.pdf"
+
+    if not os.path.exists(pdf_path):
+        return None
+
+    # Load PDF
+    loader = PyPDFLoader(pdf_path)
+    docs = loader.load()
+
+    # Split text
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    chunks = splitter.split_documents(docs)
+
+    # FREE embeddings
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+    # Vector DB
+    vectorstore = FAISS.from_documents(chunks, embeddings)
+    return vectorstore
 
 vectorstore = initialize_rag()
 
 if vectorstore is None:
-    st.info("Please put Mysoft Heaven's PDF documents in the 'data' folder to start.")
-else:
-    # Groq LLM Configuration
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0,
-        max_retries=2
-    )
+    st.error("❌ PDF not found. Put your PDF inside `data/` folder.")
+    st.stop()
 
-    # Strict system prompt
-    system_prompt = (
-        "You are a professional assistant for Mysoft Heaven (BD) Ltd. "
-        "Answer questions strictly based on provided company documents. "
-        "If the answer is not in the context, say: 'I apologize, but I don't have information about that.' "
-        "Do not answer questions irrelevant to the company.\n\n"
-        "Context: {context}"
-    )
+# -------------------------
+# Groq LLM
+# -------------------------
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0,
+    max_retries=2
+)
 
-    prompt_template = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("human", "{input}")
-    ])
+# Strict system prompt
+system_prompt = """
+You are an AI assistant for Mysoft Heaven (BD) Ltd.
+Answer ONLY based on provided documents.
+If not found, say:
+"I apologize, but I don't have information about that."
 
-    combine_docs_chain = create_stuff_documents_chain(llm, prompt_template)
-    qa_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_docs_chain)
+Context:
+{context}
+"""
 
-    # -------------------------
-    # Chat history
-    # -------------------------
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("human", "{input}")
+])
 
-    # Display previous messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+combine_chain = create_stuff_documents_chain(llm, prompt)
+qa_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_chain)
 
-    # User input
-    if user_input := st.chat_input("Ask anything about Mysoft Heaven..."):
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.markdown(user_input)
+# -------------------------
+# Chat History
+# -------------------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking (Powered by Groq)..."):
-                try:
-                    response = qa_chain.invoke({"input": user_input})
-                    answer = response["answer"]
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                except Exception as e:
-                    st.error(f"Error: {e}")
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
+# -------------------------
+# Chat UI
+# -------------------------
+user_input = st.chat_input("Ask about Mysoft Heaven...")
 
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            try:
+                response = qa_chain.invoke({"input": user_input})
+                answer = response["answer"]
+                st.markdown(answer)
+                st.session_state.messages.append({"role": "assistant", "content": answer})
+            except Exception as e:
+                st.error(f"Error: {e}")
