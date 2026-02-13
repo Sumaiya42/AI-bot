@@ -82,7 +82,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 
-qa_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_chain)
+
 
 # -------------------------
 # Chat History
@@ -114,6 +114,7 @@ if user_input:
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:
                 st.error(f"Error: {e}")
+
 
 
 
