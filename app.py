@@ -17,7 +17,7 @@ if not GROQ_API_KEY:
     st.stop()
 
 # -------------------------
-# LOAD PDF
+# Load PDF and build vectorstore
 # -------------------------
 def load_vectorstore():
     if not os.path.exists("data"):
@@ -38,12 +38,12 @@ if vectorstore is None:
     st.stop()
 
 # -------------------------
-# LLM
+# LLM setup
 # -------------------------
 llm = ChatGroq(model="llama-3.3-70b-versatile")
 
 # -------------------------
-# Prompt
+# Prompt template
 # -------------------------
 system_prompt = """
 You are Mysoft Heaven AI assistant.
@@ -62,15 +62,38 @@ prompt = ChatPromptTemplate.from_messages([
 # -------------------------
 st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
 
+# Initialize session chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display previous messages
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# User input
 query = st.chat_input("Ask about Mysoft Heaven...")
 
 if query:
+    # Append user message
+    st.session_state.messages.append({"role": "user", "content": query})
+    
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(query)
+
+    # --- similarity search ---
     docs = vectorstore.similarity_search(query, k=3)
     context = "\n\n".join([d.page_content for d in docs])
 
     final_prompt = prompt.format(context=context, question=query)
-    response = llm.invoke(final_prompt)
 
-    st.chat_message("user").write(query)
-    st.chat_message("assistant").write(response.content)
+    # Get LLM response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = llm.invoke(final_prompt)
+            answer = response.content
+            st.markdown(answer)
 
+    # Append assistant message
+    st.session_state.messages.append({"role": "assistant", "content": answer})
