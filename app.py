@@ -16,9 +16,8 @@ if not GROQ_API_KEY:
     st.error("Add GROQ_API_KEY in Streamlit Secrets")
     st.stop()
 
-# -------------------------
+
 # Load PDF & build vectorstore
-# -------------------------
 def load_vectorstore():
     if not os.path.exists("data"):
         return None
@@ -37,14 +36,12 @@ if vectorstore is None:
     st.error("No PDF found in data folder")
     st.stop()
 
-# -------------------------
+
 # LLM setup
-# -------------------------
 llm = ChatGroq(model="llama-3.3-70b-versatile")
 
-# -------------------------
+
 # Prompt template
-# -------------------------
 system_prompt = """
 You are Mysoft Heaven AI assistant.
 Answer ONLY from company documents.
@@ -57,21 +54,18 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{question}")
 ])
 
-# -------------------------
+
 # Streamlit UI
-# -------------------------
 st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🏢")
 st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
 
-# -------------------------
+
 # Initialize chat history
-# -------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# -------------------------
+
 # Function to display messages
-# -------------------------
 def display_messages():
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
@@ -80,9 +74,8 @@ def display_messages():
 # Display chat history at the top
 display_messages()
 
-# -------------------------
+
 # User input
-# -------------------------
 query = st.chat_input("Ask about Mysoft Heaven...")
 
 if query:
@@ -109,4 +102,5 @@ if query:
 
     # Refresh chat to show new messages
     display_messages()
+
 
