@@ -81,7 +81,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}")
 ])
 
-combine_chain = create_stuff_documents_chain(llm, prompt)
+
 qa_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_chain)
 
 # -------------------------
@@ -114,5 +114,6 @@ if user_input:
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:
                 st.error(f"Error: {e}")
+
 
 
