@@ -65,8 +65,7 @@ st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
 query = st.chat_input("Ask about Mysoft Heaven...")
 
 if query:
-    retriever = vectorstore.as_retriever()
-    docs = retriever.get_relevant_documents(query)
+    docs = vectorstore.similarity_search(query, k=3)
     context = "\n\n".join([d.page_content for d in docs])
 
     final_prompt = prompt.format(context=context, question=query)
@@ -74,3 +73,4 @@ if query:
 
     st.chat_message("user").write(query)
     st.chat_message("assistant").write(response.content)
+
