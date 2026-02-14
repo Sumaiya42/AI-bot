@@ -27,7 +27,7 @@ def load_vectorstore():
         loader = PyPDFLoader(file)
         docs.extend(loader.load())
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=300)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
     chunks = splitter.split_documents(docs)
 
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -104,6 +104,7 @@ if query:
     st.session_state.messages.append({"role": "assistant", "content": answer})
 
    
+
 
 
 
