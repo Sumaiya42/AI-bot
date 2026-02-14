@@ -46,7 +46,7 @@ llm = ChatGroq(model="llama-3.3-70b-versatile")
 system_prompt = """
 You are Mysoft Heaven AI assistant.
 Answer ONLY from company documents.
-If not found, say: I don't have information about that.
+
 Context: {context}
 """
 
@@ -103,6 +103,7 @@ if query:
 
     # Refresh chat to show new messages
     display_messages()
+
 
 
 
