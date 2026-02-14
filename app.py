@@ -22,7 +22,8 @@ def load_vectorstore():
     if not os.path.exists("data"):
         return None
 
-    loader = PyPDFLoader("data/AI Engineer Assessments.pdf")  # replace with your PDF
+    loader = PyPDFLoader("data/AI Engineer Assessments.pdf") # replace with your PDF
+    loader = PyPDFLoader("data/Mysoftheaven-Profile 2026.pdf")
     docs = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)
@@ -102,5 +103,6 @@ if query:
 
     # Refresh chat to show new messages
     display_messages()
+
 
 
