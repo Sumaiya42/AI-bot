@@ -62,35 +62,29 @@ prompt = ChatPromptTemplate.from_messages([
 st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🏢")
 st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
 
-
-# Initialize chat history
+# Chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-
-# Function to display messages
-def display_messages():
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-# Display chat history at the top
-display_messages()
-
+# Show chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
 # User input
 query = st.chat_input("Ask about Mysoft Heaven...")
 
 if query:
-    # Append user message
+    # Show user message instantly
+    st.chat_message("user").markdown(query)
     st.session_state.messages.append({"role": "user", "content": query})
 
-    # --- similarity search ---
+    # Similarity search
     docs = vectorstore.similarity_search(query, k=5)
     context = "\n\n".join([d.page_content for d in docs])
     final_prompt = prompt.format(context=context, question=query)
 
-    # Get LLM response
+    # LLM response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
@@ -98,12 +92,13 @@ if query:
                 answer = response.content
             except Exception as e:
                 answer = f"Error: {e}"
+
             st.markdown(answer)
 
-    # Append assistant message
+    # Save assistant reply
     st.session_state.messages.append({"role": "assistant", "content": answer})
-
    
+
 
 
 
