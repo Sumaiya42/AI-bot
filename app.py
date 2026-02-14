@@ -22,16 +22,17 @@ def load_vectorstore():
     if not os.path.exists("data"):
         return None
 
-docs = []
-for file in ["data/AI Engineer Assessments.pdf", "data/Mysoftheaven-Profile 2026.pdf"]:
-    loader = PyPDFLoader(file)
-    docs.extend(loader.load())
+    docs = []
+    for file in ["data/AI Engineer Assessments.pdf", "data/Mysoftheaven-Profile 2026.pdf"]:
+        loader = PyPDFLoader(file)
+        docs.extend(loader.load())
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=300)
     chunks = splitter.split_documents(docs)
 
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     return FAISS.from_documents(chunks, embeddings)
+
 
 vectorstore = load_vectorstore()
 if vectorstore is None:
@@ -103,6 +104,7 @@ if query:
     st.session_state.messages.append({"role": "assistant", "content": answer})
 
    
+
 
 
 
