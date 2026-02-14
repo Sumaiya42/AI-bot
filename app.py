@@ -22,9 +22,10 @@ def load_vectorstore():
     if not os.path.exists("data"):
         return None
 
-    loader = PyPDFLoader("data/AI Engineer Assessments.pdf") # replace with your PDF
-    loader = PyPDFLoader("data/Mysoftheaven-Profile 2026.pdf")
-    docs = loader.load()
+docs = []
+for file in ["data/AI Engineer Assessments.pdf", "data/Mysoftheaven-Profile 2026.pdf"]:
+    loader = PyPDFLoader(file)
+    docs.extend(loader.load())
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)
     chunks = splitter.split_documents(docs)
@@ -101,8 +102,8 @@ if query:
     # Append assistant message
     st.session_state.messages.append({"role": "assistant", "content": answer})
 
-    # Refresh chat to show new messages
-    display_messages()
+   
+
 
 
 
