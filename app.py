@@ -22,7 +22,7 @@ def load_vectorstore():
         return None
 
     docs = []
-    for file in ["data/AI Engineer Assessments.pdf", "data/Mysoftheaven-Profile 2026.pdf"]:
+    for file in ["Data/Soil Classification.pdf"]:
         loader = PyPDFLoader(file)
         docs.extend(loader.load())
 
@@ -97,6 +97,7 @@ if query:
     # Save assistant reply
     st.session_state.messages.append({"role": "assistant", "content": answer})
    
+
 
 
 
