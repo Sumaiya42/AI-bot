@@ -8,9 +8,8 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
-# -------------------------
+
 # API Key
-# -------------------------
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     st.error("Add GROQ_API_KEY in Streamlit Secrets")
@@ -46,7 +45,7 @@ llm = ChatGroq(model="llama-3.3-70b-versatile")
 
 # Prompt template
 system_prompt = """
-You are Mysoft Heaven AI assistant.
+You are My AI assistant.
 Answer ONLY from company documents.
 
 Context: {context}
@@ -59,8 +58,8 @@ prompt = ChatPromptTemplate.from_messages([
 
 
 # Streamlit UI
-st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🏢")
-st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
+st.set_page_config(page_title="Soil classification AI", page_icon="🏢")
+st.title("🤖 Soil classification AI Assistant")
 
 # Chat history
 if "messages" not in st.session_state:
@@ -72,7 +71,7 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
 # User input
-query = st.chat_input("Ask about Mysoft Heaven...")
+query = st.chat_input("Ask about My Soil classification...")
 
 if query:
     # Show user message instantly
@@ -98,6 +97,7 @@ if query:
     # Save assistant reply
     st.session_state.messages.append({"role": "assistant", "content": answer})
    
+
 
 
 
