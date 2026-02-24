@@ -20,11 +20,9 @@ if not GROQ_API_KEY:
 def load_vectorstore():
     if not os.path.exists("data"):
         return None
+    loader = PyPDFLoader("Data/Soil Classification.pdf") 
+    docs = loader.load()
 
-    docs = []
-    for file in ["Data/Soil Classification.pdf"]:
-        loader = PyPDFLoader(file)
-        docs.extend(loader.load())
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=200)
     chunks = splitter.split_documents(docs)
@@ -97,6 +95,7 @@ if query:
     # Save assistant reply
     st.session_state.messages.append({"role": "assistant", "content": answer})
    
+
 
 
 
