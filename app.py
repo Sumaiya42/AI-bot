@@ -8,7 +8,6 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.memory import ConversationBufferMemory
 
 
 # -------------------------------------------------------------------
@@ -63,13 +62,10 @@ llm = ChatGroq(model="llama-3.3-70b-versatile")
 
 
 # -------------------------------------------------------------------
-# Conversation Memory (NEW)
+# Manual Conversation Memory (NO LANGCHAIN IMPORT)
 # -------------------------------------------------------------------
-if "memory" not in st.session_state:
-    st.session_state.memory = ConversationBufferMemory(
-        return_messages=True
-    )
-memory = st.session_state.memory
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 
 # -------------------------------------------------------------------
@@ -98,14 +94,10 @@ prompt = ChatPromptTemplate.from_messages([
 st.set_page_config(page_title="Mysoft Heaven AI", page_icon="🏢")
 st.title("🤖 Mysoft Heaven (BD) Ltd AI Assistant")
 
-# Chat history display
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+# Display chat history
+for role, content in st.session_state.chat_history:
+    with st.chat_message(role):
+        st.markdown(content)
 
 
 # -------------------------------------------------------------------
@@ -115,22 +107,24 @@ query = st.chat_input("Ask about Mysoft Heaven...")
 
 if query:
 
-    # Display user message
+    # Save user message
+    st.session_state.chat_history.append(("user", query))
+
+    # Show user message
     st.chat_message("user").markdown(query)
-    st.session_state.messages.append({"role": "user", "content": query})
 
     # Retrieve similar docs
     docs = vectorstore.similarity_search(query, k=5)
     context = "\n\n".join([d.page_content for d in docs])
 
-    # Load history from memory
-    history = memory.load_memory_variables({})["history"]
+    # Build conversation history text manually
+    history_text = "\n".join([f"{role}: {msg}" for role, msg in st.session_state.chat_history])
 
-    # Create final formatted prompt
+    # Create final prompt
     final_prompt = prompt.format(
         context=context,
         question=query,
-        history=history
+        history=history_text
     )
 
     # LLM response
@@ -144,11 +138,5 @@ if query:
 
             st.markdown(answer)
 
-    # Save to UI history
-    st.session_state.messages.append({"role": "assistant", "content": answer})
-
-    # Save to conversation memory
-    memory.save_context(
-        {"input": query},
-        {"output": answer}
-    )
+    # Save assistant response
+    st.session_state.chat_history.append(("assistant", answer))
